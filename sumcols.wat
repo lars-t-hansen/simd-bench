@@ -1,0 +1,162 @@
+;; Given an input matrix at loc p of column length l where a row is some 128-bit vector,
+;; sum the colums and leave the sums in a vector at location 0.
+
+(module
+  (memory (export "mem") 1 1)
+
+  (func (export "sumf32x4") (param $p i32) (param $l i32)
+    (local $sum v128)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum (f32x4.add (local.get $sum) (v128.load (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (v128.store (i32.const 0) (local.get $sum)))
+
+  (func (export "sumf32x4_scalar") (param $p i32) (param $l i32)
+    (local $sum_x f32)
+    (local $sum_y f32)
+    (local $sum_z f32)
+    (local $sum_w f32)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum_x (f32.add (local.get $sum_x) (f32.load offset=0 (local.get $p))))
+        (local.set $sum_y (f32.add (local.get $sum_y) (f32.load offset=4 (local.get $p))))
+        (local.set $sum_z (f32.add (local.get $sum_z) (f32.load offset=8 (local.get $p))))
+        (local.set $sum_w (f32.add (local.get $sum_w) (f32.load offset=12 (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (f32.store (i32.const 0) (local.get $sum_x))
+    (f32.store (i32.const 4) (local.get $sum_y))
+    (f32.store (i32.const 8) (local.get $sum_z))
+    (f32.store (i32.const 12) (local.get $sum_w)))
+
+  (func (export "sumf64x2") (param $p i32) (param $l i32)
+    (local $sum v128)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum (f64x2.add (local.get $sum) (v128.load (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (v128.store (i32.const 0) (local.get $sum)))
+
+  (func (export "sumf64x2_scalar") (param $p i32) (param $l i32)
+    (local $sum_x f64)
+    (local $sum_y f64)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum_x (f64.add (local.get $sum_x) (f64.load offset=0 (local.get $p))))
+        (local.set $sum_y (f64.add (local.get $sum_y) (f64.load offset=8 (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (f64.store (i32.const 0) (local.get $sum_x))
+    (f64.store (i32.const 8) (local.get $sum_y)))
+
+  (func (export "sumi32x4") (param $p i32) (param $l i32)
+    (local $sum v128)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum (i32x4.add (local.get $sum) (v128.load (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (v128.store (i32.const 0) (local.get $sum)))
+
+  (func (export "sumi32x4_scalar") (param $p i32) (param $l i32)
+    (local $sum_x i32)
+    (local $sum_y i32)
+    (local $sum_z i32)
+    (local $sum_w i32)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum_x (i32.add (local.get $sum_x) (i32.load offset=0 (local.get $p))))
+        (local.set $sum_y (i32.add (local.get $sum_y) (i32.load offset=4 (local.get $p))))
+        (local.set $sum_z (i32.add (local.get $sum_z) (i32.load offset=8 (local.get $p))))
+        (local.set $sum_w (i32.add (local.get $sum_w) (i32.load offset=12 (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (i32.store (i32.const 0) (local.get $sum_x))
+    (i32.store (i32.const 4) (local.get $sum_y))
+    (i32.store (i32.const 8) (local.get $sum_z))
+    (i32.store (i32.const 12) (local.get $sum_w)))
+
+  (func (export "sumi8x16") (param $p i32) (param $l i32)
+    (local $sum v128)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum (i8x16.add (local.get $sum) (v128.load (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (v128.store (i32.const 0) (local.get $sum)))
+
+  (func (export "sumi8x16_scalar") (param $p i32) (param $l i32)
+    (local $sum_x0 i32)
+    (local $sum_x1 i32)
+    (local $sum_x2 i32)
+    (local $sum_x3 i32)
+    (local $sum_x4 i32)
+    (local $sum_x5 i32)
+    (local $sum_x6 i32)
+    (local $sum_x7 i32)
+    (local $sum_x8 i32)
+    (local $sum_x9 i32)
+    (local $sum_x10 i32)
+    (local $sum_x11 i32)
+    (local $sum_x12 i32)
+    (local $sum_x13 i32)
+    (local $sum_x14 i32)
+    (local $sum_x15 i32)
+    (block $B1
+      (loop $L1
+        (br_if $B1 (i32.eqz (local.get $l)))
+        (local.set $sum_x0 (i32.add (local.get $sum_x0) (i32.load8_s offset=0 (local.get $p))))
+        (local.set $sum_x1 (i32.add (local.get $sum_x1) (i32.load8_s offset=1 (local.get $p))))
+        (local.set $sum_x2 (i32.add (local.get $sum_x2) (i32.load8_s offset=2 (local.get $p))))
+        (local.set $sum_x3 (i32.add (local.get $sum_x3) (i32.load8_s offset=3 (local.get $p))))
+        (local.set $sum_x4 (i32.add (local.get $sum_x4) (i32.load8_s offset=4 (local.get $p))))
+        (local.set $sum_x5 (i32.add (local.get $sum_x5) (i32.load8_s offset=5 (local.get $p))))
+        (local.set $sum_x6 (i32.add (local.get $sum_x6) (i32.load8_s offset=6 (local.get $p))))
+        (local.set $sum_x7 (i32.add (local.get $sum_x7) (i32.load8_s offset=7 (local.get $p))))
+        (local.set $sum_x8 (i32.add (local.get $sum_x8) (i32.load8_s offset=8 (local.get $p))))
+        (local.set $sum_x9 (i32.add (local.get $sum_x9) (i32.load8_s offset=9 (local.get $p))))
+        (local.set $sum_x10 (i32.add (local.get $sum_x10) (i32.load8_s offset=10 (local.get $p))))
+        (local.set $sum_x11 (i32.add (local.get $sum_x11) (i32.load8_s offset=11 (local.get $p))))
+        (local.set $sum_x12 (i32.add (local.get $sum_x12) (i32.load8_s offset=12 (local.get $p))))
+        (local.set $sum_x13 (i32.add (local.get $sum_x13) (i32.load8_s offset=13 (local.get $p))))
+        (local.set $sum_x14 (i32.add (local.get $sum_x14) (i32.load8_s offset=14 (local.get $p))))
+        (local.set $sum_x15 (i32.add (local.get $sum_x15) (i32.load8_s offset=15 (local.get $p))))
+	(local.set $p (i32.add (local.get $p) (i32.const 16)))
+	(local.set $l (i32.sub (local.get $l) (i32.const 1)))
+        (br $L1)))
+    (i32.store8 (i32.const 0) (local.get $sum_x0))
+    (i32.store8 (i32.const 1) (local.get $sum_x1))
+    (i32.store8 (i32.const 2) (local.get $sum_x2))
+    (i32.store8 (i32.const 3) (local.get $sum_x3))
+    (i32.store8 (i32.const 4) (local.get $sum_x4))
+    (i32.store8 (i32.const 5) (local.get $sum_x5))
+    (i32.store8 (i32.const 6) (local.get $sum_x6))
+    (i32.store8 (i32.const 7) (local.get $sum_x7))
+    (i32.store8 (i32.const 8) (local.get $sum_x8))
+    (i32.store8 (i32.const 9) (local.get $sum_x9))
+    (i32.store8 (i32.const 10) (local.get $sum_x10))
+    (i32.store8 (i32.const 11) (local.get $sum_x11))
+    (i32.store8 (i32.const 12) (local.get $sum_x12))
+    (i32.store8 (i32.const 13) (local.get $sum_x13))
+    (i32.store8 (i32.const 14) (local.get $sum_x14))
+    (i32.store8 (i32.const 15) (local.get $sum_x15))))
+
+
+    
