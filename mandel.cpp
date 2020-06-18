@@ -4,8 +4,6 @@
 #include <wasm_simd128.h>
 #include <SDL/SDL.h>
 
-//#define USE_SIMD
-
 #define ROUNDUP4(x) (((x)+3)&~3)
 
 #define SCALE(v, range, min, max) \
@@ -14,23 +12,49 @@
 #define WIDTH ROUNDUP4(unsigned(400*3.5))
 #define HEIGHT (400*2)
 
-// Classical
-#define CUTOFF 1000
+// Classical view
+#define CUTOFF 3000
 #define MINY -1
 #define MAXY 1
 #define MINX -2.5
 #define MAXX 1
 
-// Closer-in view
-//#define CUTOFF 10000
-//#define MINY -0.5
-//#define MAXY 0.5
-//#define MINX -1.75
-//#define MAXX 0
-
 unsigned iterations[HEIGHT][WIDTH];
 
-#ifndef USE_SIMD
+#ifdef USE_SIMD
+void mandel() {
+    v128_t* addr = (v128_t*)&iterations[0][0];
+    for ( float Py=0.0 ; Py < HEIGHT; Py++ ) {
+        v128_t y0 = wasm_f32x4_splat(SCALE(Py, HEIGHT, MINY, MAXY));
+        for ( float Px=0.0 ; Px < WIDTH; Px+=4 ) {
+            v128_t x0 = wasm_f32x4_make(SCALE(Px,   WIDTH, MINX, MAXX),
+                                        SCALE(Px+1, WIDTH, MINX, MAXX),
+                                        SCALE(Px+2, WIDTH, MINX, MAXX),
+                                        SCALE(Px+3, WIDTH, MINX, MAXX));
+            v128_t x = wasm_f32x4_const(0, 0, 0, 0);
+            v128_t y = wasm_f32x4_const(0, 0, 0, 0);
+            v128_t active = wasm_i32x4_const(-1, -1, -1, -1);
+            v128_t counter = wasm_i32x4_const(CUTOFF, CUTOFF, CUTOFF, CUTOFF);
+            for(;;) {
+                v128_t x_sq = wasm_f32x4_mul(x, x);
+                v128_t y_sq = wasm_f32x4_mul(y, y);
+                v128_t sum_sq = wasm_f32x4_add(x_sq, y_sq);
+                active = wasm_v128_and(active, wasm_f32x4_le(sum_sq, wasm_f32x4_const(4, 4, 4, 4)));
+                active = wasm_v128_and(active, wasm_i32x4_gt(counter, wasm_i32x4_const(0,0,0,0)));
+                if (!wasm_i32x4_any_true(active))
+                    break;
+                v128_t tmp = wasm_f32x4_add(wasm_f32x4_sub(x_sq, y_sq), x0);
+                v128_t xy = wasm_f32x4_mul(x, y);
+                y = wasm_f32x4_add(wasm_f32x4_add(xy, xy), y0);
+                x = tmp;
+                counter = wasm_i32x4_add(counter, active);
+            }
+            counter = wasm_i32x4_sub(wasm_i32x4_const(CUTOFF, CUTOFF, CUTOFF, CUTOFF), counter);
+            *addr++ = counter;
+        }
+    }
+}
+#else
 void mandel() {
     for ( unsigned Py=0 ; Py < HEIGHT; Py++ ) {
         float y0 = SCALE(Py, HEIGHT, MINY, MAXY);
@@ -49,49 +73,6 @@ void mandel() {
         }
     }
 }
-#else
-void mandel_simd() {
-    v128_t* addr = (v128_t*)&iterations[0][0];
-    for ( float Py=0 ; Py < HEIGHT; Py++ ) {
-        v128_t y0 = wasm_f32x4_splat(SCALE(Py, HEIGHT, MINY, MAXY));
-        for ( float Px=0 ; Px < WIDTH; Px+=4 ) {
-            v128_t x0 = wasm_f32x4_make(SCALE(Px,   WIDTH, MINX, MAXX),
-                                        SCALE(Px+1, WIDTH, MINX, MAXX),
-                                        SCALE(Px+2, WIDTH, MINX, MAXX),
-                                        SCALE(Px+3, WIDTH, MINX, MAXX));
-            v128_t x = wasm_f32x4_const(0, 0, 0, 0);
-            v128_t y = wasm_f32x4_const(0, 0, 0, 0);
-            v128_t active = wasm_i32x4_const(-1, -1, -1, -1);
-            v128_t iteration = wasm_i32x4_const(0, 0, 0, 0);
-//            v128_t counter = wasm_i32x4_const(CUTOFF, CUTOFF, CUTOFF, CUTOFF);
-            for(;;) {
-                v128_t x_sq = wasm_f32x4_mul(x, x);
-                v128_t y_sq = wasm_f32x4_mul(y, y);
-                v128_t sum_sq = wasm_f32x4_add(x_sq, y_sq);
-                active = wasm_v128_and(active, wasm_f32x4_le(sum_sq, wasm_f32x4_const(4, 4, 4, 4)));
-//                active = wasm_v128_and(active, wasm_i32x4_gt(counter, wasm_i32x4_const(0,0,0,0)));
-                active = wasm_v128_and(active, wasm_i32x4_lt(iteration, wasm_i32x4_const(CUTOFF, CUTOFF, CUTOFF, CUTOFF)));
-                if (wasm_i32x4_extract_lane(active, 0) == 0 &&
-                    wasm_i32x4_extract_lane(active, 1) == 0 &&
-                    wasm_i32x4_extract_lane(active, 2) == 0 &&
-                    wasm_i32x4_extract_lane(active, 3) == 0)
-                    break;
-//                if (!wasm_i32x4_any_true(active))
-//                    break;
-                v128_t tmp = wasm_f32x4_add(wasm_f32x4_sub(x_sq, y_sq), x0);
-                v128_t xy = wasm_f32x4_mul(x, y);
-                y = wasm_f32x4_add(wasm_f32x4_add(xy, xy), y0);
-                x = tmp;
-                v128_t incr = wasm_v128_and(active, wasm_i32x4_const(1,1,1,1));
-                iteration = wasm_i32x4_add(iteration, incr);
-//                counter = wasm_i32x4_add(counter, active);
-            }
-//            counter = wasm_i32x4_sub(wasm_i32x4_const(CUTOFF, CUTOFF, CUTOFF, CUTOFF), counter);
-//            *addr++ = counter;
-            *addr++ = iteration;
-        }
-    }
-}
 #endif
 
 uint64_t timestamp() {
@@ -100,6 +81,7 @@ uint64_t timestamp() {
     return uint64_t(tp.tv_sec)*1000000 + tp.tv_usec;
 }
 
+#ifdef SDLOUTPUT
 // Supposedly the gradients used by the Wikipedia mandelbrot page
 
 #define C(r,g,b) ((r << 16) | (g << 8) | b)
@@ -125,17 +107,28 @@ int32_t mapping[16] = {
     C(153, 87, 0),
     C(106, 52, 3)
 };
+#endif
 
 int main(int argc, char** argv) {
+#ifdef RUNTIME
     uint64_t then = timestamp();
-#ifndef USE_SIMD
-    mandel();
-#else
-    mandel_simd();
 #endif
-    uint64_t now = timestamp();
-    fprintf(stderr, "Rendering time: %g ms\n", (now-then) / 1000.0);
 
+    mandel();
+
+#ifdef RUNTIME
+    uint64_t now = timestamp();
+    double runtime = (now - then) / 1000.0;
+    printf("Rendering time "
+# ifdef USE_SIMD
+            "SIMD"
+# else
+            "scalar"
+# endif
+            ": %g ms\n", runtime);
+#endif
+
+#ifdef SDLOUTPUT
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Surface *screen = SDL_SetVideoMode(WIDTH, HEIGHT, 32, SDL_SWSURFACE);
 
@@ -158,6 +151,7 @@ int main(int argc, char** argv) {
 
     if (SDL_MUSTLOCK(screen))
 	SDL_UnlockSurface(screen);
+#endif
 
     return 0;
 }
