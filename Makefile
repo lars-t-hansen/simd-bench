@@ -21,7 +21,8 @@ sumcols.wasm: sumcols.wat sumcols.js Makefile
 	wat2wasm --enable-simd sumcols.wat
 
 # -munimplemented-simd128 will get us v128.const
-MANDEL_OPT= -s WASM=1 -DUSE_SIMD -std=c++11 -O3 -msimd128 -munimplemented-simd128 
+# -O3 has led to subpar performance in the past (bug 1646663)
+MANDEL_OPT= -s WASM=1 -DUSE_SIMD -std=c++11 -O2 -msimd128 -munimplemented-simd128 
 
 mandel.html: mandel.cpp Makefile
 	emcc $(MANDEL_OPT) -DRUNTIME -DSDL_OUTPUT -o mandel.html mandel.cpp
