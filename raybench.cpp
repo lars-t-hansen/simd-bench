@@ -130,13 +130,7 @@ typedef v128_t Bool3;
 
 #define Vec3C(x, y, z) wasm_f32x4_const(x, y, z, 0)
 
-static inline Vec3 Vec3B(Float x, Float y, Float z) {
-    Vec3 res = Vec3Z();
-    res = wasm_f32x4_replace_lane(res, 0, x);
-    res = wasm_f32x4_replace_lane(res, 1, y);
-    res = wasm_f32x4_replace_lane(res, 2, z);
-    return res;
-}
+#define Vec3B(x, y, z) wasm_f32x4_make(x, y, z, 0)
 
 #define V3P v128_t
 
@@ -220,6 +214,9 @@ struct Vec3 {
     Float y_;
     Float z_;
 
+    // The zero init is a little dangerous because we don't get this with the
+    // SIMD version, beware of subtle bugs.  Consider garbage-init here under a
+    // DEBUG define.
     Vec3() : x_(0), y_(0), z_(0) {}
 
     Vec3(Float x, Float y, Float z)
@@ -808,7 +805,7 @@ static void traceWithAntialias(uint32_t ymin, uint32_t ylim, uint32_t xmin, uint
 	    const uint32_t n = 4;
 	    //var k = h % 32;
 	    uint32_t rand = k % 2;
-	    Vec3 c;
+	    Vec3 c = Vec3Z();
 	    k++;
 	    for ( uint32_t p=0 ; p < n ; p++ ) {
 		for ( uint32_t q=0 ; q < n ; q++ ) {

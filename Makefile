@@ -57,7 +57,7 @@ mandel.wasm: mandel.cpp Makefile
 # Processing and output options are as for Mandelbrot.
 
 # With SIMD
-RAYBENCH_OPT=-s WASM=1 -DPARTITIONING=true -DSHADOWS=true -DANTIALIAS=true -DREFLECTION=2 -std=c++11 -O2 -msimd128 -munimplemented-simd128 
+RAYBENCH_OPT=-s WASM=1 -DUSE_SIMD -DPARTITIONING=true -DSHADOWS=true -DANTIALIAS=true -DREFLECTION=2 -std=c++11 -O2 -msimd128 -munimplemented-simd128 
 
 raybench.html: raybench.cpp Makefile
 	emcc $(RAYBENCH_OPT) -DRUNTIME -DSDL_OUTPUT -o raybench.html raybench.cpp
