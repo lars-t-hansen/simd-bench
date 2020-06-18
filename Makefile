@@ -63,4 +63,4 @@ raybench.html: raybench.cpp Makefile
 	emcc $(RAYBENCH_OPT) -DRUNTIME -DSDL_OUTPUT -o raybench.html raybench.cpp
 
 raybench.js: raybench.cpp Makefile
-	emcc $(RAYBENCH_OPT) -DPPMX_STDOUT -o raybench.js raybench.cpp
+	emcc $(RAYBENCH_OPT) -DRUNTIME -o raybench.js raybench.cpp
