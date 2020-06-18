@@ -725,19 +725,21 @@ int main(int argc, char** argv)
 	SDL_LockSurface(screen);
 #endif
 
+#if defined(SDL_OUTPUT) || defined(PPMX_STDOUT)
     for (uint32_t y = 0; y < g_height ; y++ ) {
 	for (uint32_t x = 0; x < g_width; x++) {
 	    uint8_t r, g, b, a;
-#ifdef SDL_OUTPUT
+# ifdef SDL_OUTPUT
 	    componentsFromRgba(bits.ref(y, x), &r, &g, &b, &a);
             *((Uint32*)screen->pixels + (g_height-1-y) * g_width + x) = SDL_MapRGBA(screen->format, r, g, b, a);
-#endif
-#ifdef PPMX_STDOUT
+# endif
+# ifdef PPMX_STDOUT
 	    componentsFromRgba(bits.ref(g_height-1-y, x), &r, &g, &b, &a);
             printf("!%x!%x!%x", r, g, b);
-#endif
+# endif
 	}
     }
+#endif
 
 #ifdef SDL_OUTPUT
     if (SDL_MUSTLOCK(screen))
