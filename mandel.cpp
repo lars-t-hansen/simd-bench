@@ -22,7 +22,7 @@
 unsigned iterations[HEIGHT][WIDTH];
 
 #ifdef USE_SIMD
-void mandel() {
+static void mandel() {
     v128_t* addr = (v128_t*)&iterations[0][0];
     for ( float Py=0.0 ; Py < HEIGHT; Py++ ) {
         v128_t y0 = wasm_f32x4_splat(SCALE(Py, HEIGHT, MINY, MAXY));
@@ -55,7 +55,7 @@ void mandel() {
     }
 }
 #else
-void mandel() {
+static void mandel() {
     for ( unsigned Py=0 ; Py < HEIGHT; Py++ ) {
         float y0 = SCALE(Py, HEIGHT, MINY, MAXY);
         for ( unsigned Px=0 ; Px < WIDTH; Px++ ) {
@@ -76,7 +76,7 @@ void mandel() {
 #endif
 
 #ifdef RUNTIME
-uint64_t timestamp() {
+static uint64_t timestamp() {
     struct timeval tp;
     gettimeofday(&tp, nullptr);
     return uint64_t(tp.tv_sec)*1000000 + tp.tv_usec;
@@ -91,7 +91,7 @@ uint64_t timestamp() {
 #define G(rgb) ((rgb >> 8) & 255);
 #define B(rgb) (rgb & 255)
 
-int32_t mapping[16] = {
+static int32_t mapping[16] = {
     C(66, 30, 15),
     C(25, 7, 26),
     C(9, 1, 47),
