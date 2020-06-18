@@ -75,13 +75,15 @@ void mandel() {
 }
 #endif
 
+#ifdef RUNTIME
 uint64_t timestamp() {
     struct timeval tp;
     gettimeofday(&tp, nullptr);
     return uint64_t(tp.tv_sec)*1000000 + tp.tv_usec;
 }
+#endif
 
-#ifdef SDLOUTPUT
+#if defined(SDL_OUTPUT) || defined(PPMX_OUTPUT)
 // Supposedly the gradients used by the Wikipedia mandelbrot page
 
 #define C(r,g,b) ((r << 16) | (g << 8) | b)
@@ -128,13 +130,23 @@ int main(int argc, char** argv) {
             ": %g ms\n", runtime);
 #endif
 
-#ifdef SDLOUTPUT
+    // SDL_OUTPUT is for the browser, it renders in a canvas.
+    //
+    // PPMX_OUTPUT is for the js shell, it writes text output that must be
+    // postprocessed by ppmx2ppm.
+#ifdef SDL_OUTPUT
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Surface *screen = SDL_SetVideoMode(WIDTH, HEIGHT, 32, SDL_SWSURFACE);
 
     if (SDL_MUSTLOCK(screen))
 	SDL_LockSurface(screen);
+#endif
 
+#ifdef PPMX_OUTPUT
+    printf("P6 %d %d 255\n", WIDTH, HEIGHT);
+#endif
+
+#if defined(SDL_OUTPUT) || defined(PPMX_OUTPUT)
     for (uint32_t y = 0; y < HEIGHT ; y++ ) {
 	for (uint32_t x = 0; x < WIDTH; x++) {
 	    uint8_t r, g, b, a = 0;
@@ -145,12 +157,22 @@ int main(int argc, char** argv) {
             } else {
                 r = g = b = 0;
             }
+# ifdef SDL_OUTPUT
 	    *((Uint32*)screen->pixels + (HEIGHT-y-1) * WIDTH + x) = SDL_MapRGBA(screen->format, r, g, b, a);
+# endif
+# ifdef PPMX_OUTPUT
+	    printf("!%x!%x!%x", r, g, b);
+# endif
 	}
     }
+#endif
 
+#ifdef SDL_OUTPUT
     if (SDL_MUSTLOCK(screen))
 	SDL_UnlockSurface(screen);
+#endif
+#ifdef PPMX_OUTPUT
+    printf("\n");
 #endif
 
     return 0;
