@@ -574,30 +574,22 @@ public:
     {}
 
     Surface* intersect(V3P eye, V3P ray, Float min, Float max, Float* distance) {
-	// TODO: observe that values that do not depend on g, h, and i can be precomputed
-	// and stored with the triangle (for a given eye position), at some (possibly significant)
-	// space cost.  Notably the numerator of "t" is invariant, as are many factors of the
-	// numerator of "gamma".
-	Float a = X(v1) - X(v2);
-	Float b = Y(v1) - Y(v2);
-	Float c = Z(v1) - Z(v2);
-	Float d = X(v1) - X(v3);
-	Float e = Y(v1) - Y(v3);
-	Float f = Z(v1) - Z(v3);
-	Float g = X(ray);
-	Float h = Y(ray);
-	Float i = Z(ray);
-	Float j = X(v1) - X(eye);
-	Float k = Y(v1) - Y(eye);
-	Float l = Z(v1) - Z(eye);
-	Float M = a*(e*i - h*f) + b*(g*f - d*i) + c*(d*h - e*g);
-	Float t = -((f*(a*k - j*b) + e*(j*c - a*l) + d*(b*l - k*c))/M);
+	// TODO: observe that values that do not depend on ray can be
+	// precomputed and stored with the triangle (for a given eye position),
+	// at some (possibly significant) space cost.
+        Vec3 v1_minus_v2 = sub(v1, v2);
+        Vec3 v1_minus_v3 = sub(v1, v3);
+        Vec3 v1_minus_eye = sub(v1, eye);
+        Vec3 v1_minus_v2_x_v1_minus_eye = cross(v1_minus_v2, v1_minus_eye);
+        Vec3 v1_minus_v3_x_ray = cross(v1_minus_v3, ray);
+	Float M = dot(v1_minus_v2, v1_minus_v3_x_ray);
+        Float t = -(dot(v1_minus_v3, v1_minus_v2_x_v1_minus_eye)/M);
 	if (t < min || t > max)
 	    return nullptr;
-	Float gamma = (i*(a*k - j*b) + h*(j*c - a*l) + g*(b*l - k*c))/M;
+	Float gamma = dot(ray, v1_minus_v2_x_v1_minus_eye)/M;
 	if (gamma < 0 || gamma > 1.0)
 	    return nullptr;
-	Float beta = (j*(e*i - h*f) + k*(g*f - d*i) + l*(d*h - e*g))/M;
+	Float beta = dot(v1_minus_eye, v1_minus_v3_x_ray)/M;
 	if (beta < 0.0 || beta > 1.0 - gamma)
 	    return nullptr;
 	*distance = t;
