@@ -43,10 +43,10 @@ sumcols.wasm: sumcols.wat sumcols.js Makefile
 MANDEL_OPT= -s WASM=1 -DUSE_SIMD -std=c++11 -O2 -msimd128 -munimplemented-simd128 
 
 mandel.html: mandel.cpp Makefile
-	emcc $(MANDEL_OPT) -DRUNTIME -DSDL_OUTPUT -o mandel.html mandel.cpp
+	emcc $(MANDEL_OPT) -DRUNTIME -DSDL_BROWSER -o mandel.html mandel.cpp
 
 mandel.js: mandel.cpp Makefile
-	emcc $(MANDEL_OPT) -DRUNTIME -o mandel.js mandel.cpp
+	emcc $(MANDEL_OPT) -DPPMX_STDOUT -o mandel.js mandel.cpp
 
 # For the specially interested.
 mandel.wasm: mandel.cpp Makefile
@@ -59,7 +59,7 @@ mandel.wasm: mandel.cpp Makefile
 RAYBENCH_OPT=-s WASM=1 -DUSE_SIMD -DPARTITIONING=true -DSHADOWS=true -DANTIALIAS=true -DREFLECTION=2 -std=c++11 -O2 -msimd128 -munimplemented-simd128 
 
 raybench.html: raybench.cpp Makefile
-	emcc $(RAYBENCH_OPT) -DRUNTIME -DSDL_OUTPUT -o raybench.html raybench.cpp
+	emcc $(RAYBENCH_OPT) -DRUNTIME -DSDL_BROWSER -o raybench.html raybench.cpp
 
 raybench.js: raybench.cpp Makefile
-	emcc $(RAYBENCH_OPT) -DRUNTIME -o raybench.js raybench.cpp
+	emcc $(RAYBENCH_OPT) -DPPMX_STDOUT -o raybench.js raybench.cpp

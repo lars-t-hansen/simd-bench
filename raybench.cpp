@@ -27,7 +27,7 @@
 #include <emscripten.h>
 #include <wasm_simd128.h>
 
-#ifdef SDL_OUTPUT
+#ifdef SDL_BROWSER
 #  include <SDL/SDL.h>
 #endif
 
@@ -709,7 +709,7 @@ int main(int argc, char** argv)
     printf("P6 %d %d 255\n", g_width, g_height);
 #endif
 
-#ifdef SDL_OUTPUT
+#ifdef SDL_BROWSER
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Surface *screen = SDL_SetVideoMode(g_width, g_height, 32, SDL_SWSURFACE);
 
@@ -717,11 +717,11 @@ int main(int argc, char** argv)
 	SDL_LockSurface(screen);
 #endif
 
-#if defined(SDL_OUTPUT) || defined(PPMX_STDOUT)
+#if defined(SDL_BROWSER) || defined(PPMX_STDOUT)
     for (uint32_t y = 0; y < g_height ; y++ ) {
 	for (uint32_t x = 0; x < g_width; x++) {
 	    uint8_t r, g, b, a;
-# ifdef SDL_OUTPUT
+# ifdef SDL_BROWSER
 	    componentsFromRgba(bits.ref(y, x), &r, &g, &b, &a);
             *((Uint32*)screen->pixels + (g_height-1-y) * g_width + x) = SDL_MapRGBA(screen->format, r, g, b, a);
 # endif
@@ -733,7 +733,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#ifdef SDL_OUTPUT
+#ifdef SDL_BROWSER
     if (SDL_MUSTLOCK(screen))
 	SDL_UnlockSurface(screen);
 #endif
